@@ -17,14 +17,9 @@ Home Server Files
 
 Documentation for the server is [here](https://planetaryannihilation.com/guides/hosting-a-local-server/).
 
-
-#### Unit Config
-
 ### Satisfactory Dedicated Server
 
 Documentation for the server is [here](https://satisfactory.fandom.com/wiki/Dedicated_servers).
-
-#### Unit Config
 
 ### VTT Tabletop Dedicated Server
 
@@ -39,10 +34,14 @@ Documentation for the server is [here](https://foundryvtt.com/article/installati
 
 https://github.com/felddy/foundryvtt-docker
 
-#### Unit Config
-
 ### Minecraft
 
 Documentation for the server is [here](https://foundryvtt.com/article/installation/).
 
-#### Unit Config
+### Backup
+
+/usr/local/sbin/cron/backup.sh
+
+/mnt/syn_nas --> NFS share on NAS
+
+Documentation is at https://ubuntu.com/server/docs/backups-shell-scripts
