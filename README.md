@@ -22,7 +22,16 @@ Documentation for the server is [here](https://satisfactory.fandom.com/wiki/Dedi
 
 ### VTT Tabletop Dedicated Server
 
+All data is stored in 
+
+```
+/data/dungeondsanddragons/foundrydata
+```
+It is analogous to /data/
+
 Documentation for the server is [here](https://foundryvtt.com/article/installation/).
+
+https://github.com/felddy/foundryvtt-docker
 
 #### Unit Config
 
