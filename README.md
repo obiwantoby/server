@@ -3,9 +3,15 @@ Home Server Files
 
 ## General Server Setup
 
-**Ubuntu LTS**
+**Debian 11**
 **Global Unit Files** for systemctl located in /etc/systemd/system/
-**User Unit Files** for systemctl --user located in 
+**User Unit Files** for systemctl --user located in
+
+### Docker Compose File
+
+```
+/data/docker/docker-compose.yml
+```
 
 ### Planetary Annhilation Dedicated Server
 
