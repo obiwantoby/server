@@ -1,0 +1,66 @@
+version: '3'
+services:
+        homeassistant:
+                image: linuxserver/homeassistant:latest
+                container_name: homeassistant
+                network_mode: host
+                environment:
+                        - PUID=1000
+                        - PGID=1000
+                        - TZ=America/New_York
+                volumes:
+                        - ./volumes/homeasssistant:/config
+                devices:
+                        - /dev/ttyUSB0
+                ports:
+                        - 8123:8123 #optional
+                restart: unless-stopped
+
+        portainer:
+                image: portainer/portainer-ce:latest
+                container_name: portainer
+                network_mode: host
+                ports:
+                        - 9443:9443
+                restart: always
+                volumes:
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - ./volumes/portainer:/data
+        esphome:
+                image: esphome/esphome:latest
+                volumes:
+                        - ./volumes/esphome:/cache
+                        - /etc/localtime:/etc/localtime:ro
+                restart: always
+                privileged: true
+                network_mode: host
+        pihole:
+                image: pihole/pihole:latest
+                # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+                network_mode: host
+
+                # ports:
+                #         - "53:53/tcp"
+                #         - "53:53/udp"
+                #         - "80:80/tcp"
+                environment:
+                        - TZ=America/New_York
+                        - DNSMASQ_LISTENING=all
+                # WEBPASSWORD: 'set a secure password here or it will be random'
+                # Volumes store your data between container upgrades
+                volumes:
+                        - ./volumes/pihole/etc-pihole:/etc/pihole
+                        - ./volumes/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+                #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+                restart: unless-stopped
+        unbound:
+                image: alpinelinux/unbound
+                network_mode: bridge
+                cap_add:
+                        - NET_ADMIN
+                ports:
+                        - "5335:5335/udp"
+                        - "5335:5335/tcp"
+                volumes:
+                        - ./volumes/unbound:/etc/unbound
+                restart: unless-stopped
