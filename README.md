@@ -45,3 +45,8 @@ Documentation for the server is [here](https://foundryvtt.com/article/installati
 /mnt/syn_nas --> NFS share on NAS
 
 Documentation is at https://ubuntu.com/server/docs/backups-shell-scripts
+
+```
+
+ip:/volume1/Backups /mnt/backup nfs defaults 0 0
+```
