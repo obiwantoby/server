@@ -44,9 +44,45 @@ Documentation for the server is [here](https://foundryvtt.com/article/installati
 
 /mnt/syn_nas --> NFS share on NAS
 
-Documentation is at https://ubuntu.com/server/docs/backups-shell-scripts
-
 ```
 
 ip:/volume1/Backups /mnt/backup nfs defaults 0 0
+```
+### Certbot
+
+In my configuration, I used cloudflare DNS, so I created a API scoped to Zone:DNS:Edit for the dns-01 challenge. 
+
+/root/cred.ini
+
+```
+# Cloudflare API token used by Certbot
+dns_cloudflare_api_token = 0123456789abcdef0123456789abcdef01234567
+```
+
+```
+certbot:
+                image: certbot/dns-cloudflare:latest
+                volumes:
+                        - ./volumes/certbot/www/:/var/www/certbot/:rw
+                        - ./volumes/certbot/conf/:/etc/letsencrypt/:rw
+                        - /root/cred.ini:/root/cred.ini
+```
+
+### Reverse Proxy
+
+Setup Nginx from my docker compose file to run on a bridged network. Had to deconflict port 80 from pihole on the same host.
+
+Default config to accept the challenge for the certbot.
+
+```
+server {
+    listen 80;
+    listen [::]:80;
+    server_name dnd.spaceforce.xxx;
+    
+    location ~ /.well-known/acme-challenge {
+        allow all;
+        root /var/www/certbot;
+    }
+}
 ```
