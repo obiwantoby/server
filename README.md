@@ -86,3 +86,6 @@ server {
     }
 }
 ```
+All other configuration is stored in each file by domain and proxy in ./volumes/nginx/conf
+
+automation.conf  base.conf  challenge.conf  dnd.conf  nvr.conf  tv.conf
