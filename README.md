@@ -10,6 +10,7 @@ Home Server Files
 
 apt-get install pve-headers-$(uname -r)
 
+```bash
 sudo apt install mstflint gawk
 NEW_FIRMWARE_BIN="CHANGE ME TO THE PATH TO BIN FILE"
 # Assume we have only one ConnectX-card and we want to flash only that card
@@ -23,7 +24,7 @@ sudo mstflint -d "${PCI_ID}" ri "${BACKUP_DIR}"/orig_firmware.bin
 sudo mstflint -d "${PCI_ID}" dc "${BACKUP_DIR}"/orig_firmware.ini
 sudo mstflint -d "${PCI_ID}" -i "${NEW_FIRMWARE_BIN}" -allow_psid_change burn
 sudo mstfwreset -d "${PCI_ID}" reset
-
+```
 ### Docker Compose File
 
 ```
