@@ -6,6 +6,23 @@ Home Server Files
 **Debian 11**
 **Global Unit Files** for systemctl located in /etc/systemd/system/
 **User Unit Files** for systemctl --user located in
+**NVIDIA MEALLNOX-4lx**
+
+apt-get install pve-headers-$(uname -r)
+
+sudo apt install mstflint gawk
+NEW_FIRMWARE_BIN="CHANGE ME TO THE PATH TO BIN FILE"
+# Assume we have only one ConnectX-card and we want to flash only that card
+PCI_ID=$(sudo lspci | gawk '($0 ~ /ConnectX/ && $1 ~ /\.0$/){print $1}' | head -n 1)
+CARD_MODEL=$(sudo lspci | gawk '($0 ~ /ConnectX/ && $1 ~ /\.0$/){print gensub(/[\]\[]/, "", "g", $8$9)}' | head -n1)
+BACKUP_DIR="${CARD_NAME}_${PCI_ID}_backup"
+mkdir -p "${BACKUP_DIR}"
+sudo mstflint -d "${PCI_ID}" query full > "${BACKUP_DIR}"/full_query.txt
+sudo mstflint -d "${PCI_ID}" hw query > "${BACKUP_DIR}"/hw_query.txt
+sudo mstflint -d "${PCI_ID}" ri "${BACKUP_DIR}"/orig_firmware.bin
+sudo mstflint -d "${PCI_ID}" dc "${BACKUP_DIR}"/orig_firmware.ini
+sudo mstflint -d "${PCI_ID}" -i "${NEW_FIRMWARE_BIN}" -allow_psid_change burn
+sudo mstfwreset -d "${PCI_ID}" reset
 
 ### Docker Compose File
 
