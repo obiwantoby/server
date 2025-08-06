@@ -9,7 +9,7 @@
 ## Basic Navigation
 ```bash
 # SSH Connection (requires legacy crypto)
-ssh -oKexAlgorithms=+diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa 192.168.2.10 -l super
+ssh -oKexAlgorithms=+diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa -oMACs=+hmac-sha1 super@192.168.2.10
 
 # Command modes
 enable                    # Enter privileged mode (no password set)
@@ -110,7 +110,7 @@ inline power ethernet <port> poe-ha             # High availability (power durin
 ```bash
 # System information
 show version                     # Hardware/software details
-show interface brief            # Port status summary
+show interface brief            # Port status summary ✅ WORKS
 show running-config             # Current configuration
 
 # VLAN information  
@@ -126,73 +126,88 @@ show interface ethernet <port>   # Detailed interface status
 show interface brief | include <pattern>  # Filtered interface list
 ```
 
-## Current Switch Configuration Summary
-- **VLAN 1**: Default VLAN, all ports untagged (except test changes)
+## Current Switch Configuration Summary ✅ UPDATED
+- **VLAN 1**: Default VLAN, all ports untagged (except trunk ports)
 - **VLAN 50**: Trunk VLAN on ports 1/1/1-3 and 1/2/1-3 (tagged)
 - **VLAN 70**: Trunk VLAN on ports 1/1/1-3 (tagged)
-- **Port 1/1/1**: "Router_Uplink" - trunk carrying VLANs 50,70
-- **Ports 1/1/2-3**: AP ports - trunks carrying VLANs 50,70
+- **Port 1/1/1**: "Router_Uplink" - UP, trunk carrying VLANs (Tag=Yes)
+- **Ports 1/1/2-3**: "Main floor AP", "Upstairs AP" - DOWN, trunks (Tag=Yes)
+- **Port 1/1/20**: Special configuration (PVID=100 instead of 1)
+- **Ports 1/2/1-3**: 10G module ports configured as trunks (Tag=Yes)
+- **ve1**: VLAN 1 interface - UP and active for Layer 3
 - **PoE**: 740W capacity, all ports enabled but no devices powered
 - **10G Module**: Ports 1/2/2,4-8 forced to 1G speed
 
-## Layer 3 Routing Configuration ⚠️ TO TEST
+## Layer 3 Routing Configuration ✅ TESTED
 ```bash
-# Enable IP routing globally
-configure terminal
-ip routing                       # Enable IP routing on the switch
+# IP routing is ALREADY ENABLED on your switch
+# Evidence: "show ip route" returns routing table with 2 routes
+# - Default route: 0.0.0.0/0 via 192.168.2.1 (Static)
+# - Connected route: 192.168.2.0/24 via ve 1 (Direct)
 
-# Create VLAN interfaces (SVIs) for inter-VLAN routing
+# VLAN interface 1 already exists with IP 192.168.2.10/24
+# Your switch already has basic Layer 3 functionality active
+
+# CORRECT way to create VLAN interfaces (SVIs):
+# Step 1: Create the VLAN interface in VLAN configuration
+configure terminal
+vlan <vlan-id>
+  router-interface ve <vlan-id>    # Create the VLAN interface
+  exit
+
+# Step 2: Configure IP address on the VLAN interface
 interface ve <vlan-id>
   ip address <ip-address> <subnet-mask>  # Assign IP to VLAN interface
   ip helper-address <dhcp-server-ip>     # DHCP relay (optional)
   exit
 
-# Static routing
-ip route <destination-network> <subnet-mask> <next-hop-ip>
-ip route 0.0.0.0 0.0.0.0 <default-gateway>  # Default route
-
-# Example inter-VLAN routing setup:
-interface ve 1
-  ip address 192.168.1.1 255.255.255.0    # Gateway for VLAN 1
+# TESTED Example: Add routing for your existing VLANs 50 and 70:
+# First create VLAN interface for VLAN 50:
+vlan 50
+  router-interface ve 50
+  exit
 interface ve 50  
   ip address 192.168.50.1 255.255.255.0   # Gateway for VLAN 50
-interface ve 70
-  ip address 192.168.70.1 255.255.255.0   # Gateway for VLAN 70
-```
-
-## Routing Monitoring Commands ⚠️ TO TEST
-```bash
-# Routing table
-show ip route                    # Display routing table
-show ip route summary           # Routing table summary
-show ip route <network>         # Specific route
-
-# VLAN interfaces
-show interface ve              # All VLAN interfaces
-show interface ve <vlan-id>    # Specific VLAN interface
-
-# ARP table
-show arp                       # ARP table
-show arp <ip-address>         # Specific ARP entry
-
-# IP configuration
-show ip interface             # IP interface status
-show ip interface brief       # Brief IP interface status
-```
-
-## Advanced Routing Features ⚠️ TO TEST
-```bash
-# OSPF configuration
-router ospf
-  area <area-id>
-  network <network> <wildcard-mask> area <area-id>
   exit
 
-# Access Control Lists (ACLs)
-access-list <number> <permit|deny> <source> <destination>
-interface ethernet <port>
-  ip access-group <acl-number> <in|out>
+# Then create VLAN interface for VLAN 70:
+vlan 70
+  router-interface ve 70
+  exit
+interface ve 70
+  ip address 192.168.70.1 255.255.255.0   # Gateway for VLAN 70
+  exit
 
-# DHCP relay
-ip helper-address <dhcp-server-ip>  # Applied to VLAN interfaces
+# Save configuration (from privileged mode)
+exit
+write memory
+```
+
+## Command Mode Requirements ✅ CONFIRMED
+```bash
+# Important: Command modes matter!
+enable                           # Enter privileged mode (for write memory)
+configure terminal              # Enter global configuration mode
+write memory                    # Save config (must be in privileged mode)
+```
+
+## Routing Monitoring Commands ✅ UPDATED
+```bash
+# Routing table
+show ip route                    # Display routing table ✅ WORKS
+show ip route summary           # Routing table summary (TO TEST)
+
+# Interface status - CORRECTED COMMANDS:
+show interface brief           # All interfaces brief status ✅ WORKS
+show interface ve1            # VLAN 1 interface details ✅ WORKS
+show interface ethernet <port> # Physical interface details (TO TEST)
+
+# Layer 3 interfaces
+show ip interface              # IP interface status ✅ WORKS
+
+# ARP table
+show arp                       # ARP table (TO TEST)
+
+# Network connectivity
+ping <ip-address>              # Test connectivity (TO TEST)
 ```
