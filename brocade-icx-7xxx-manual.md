@@ -134,3 +134,65 @@ show interface brief | include <pattern>  # Filtered interface list
 - **Ports 1/1/2-3**: AP ports - trunks carrying VLANs 50,70
 - **PoE**: 740W capacity, all ports enabled but no devices powered
 - **10G Module**: Ports 1/2/2,4-8 forced to 1G speed
+
+## Layer 3 Routing Configuration ⚠️ TO TEST
+```bash
+# Enable IP routing globally
+configure terminal
+ip routing                       # Enable IP routing on the switch
+
+# Create VLAN interfaces (SVIs) for inter-VLAN routing
+interface ve <vlan-id>
+  ip address <ip-address> <subnet-mask>  # Assign IP to VLAN interface
+  ip helper-address <dhcp-server-ip>     # DHCP relay (optional)
+  exit
+
+# Static routing
+ip route <destination-network> <subnet-mask> <next-hop-ip>
+ip route 0.0.0.0 0.0.0.0 <default-gateway>  # Default route
+
+# Example inter-VLAN routing setup:
+interface ve 1
+  ip address 192.168.1.1 255.255.255.0    # Gateway for VLAN 1
+interface ve 50  
+  ip address 192.168.50.1 255.255.255.0   # Gateway for VLAN 50
+interface ve 70
+  ip address 192.168.70.1 255.255.255.0   # Gateway for VLAN 70
+```
+
+## Routing Monitoring Commands ⚠️ TO TEST
+```bash
+# Routing table
+show ip route                    # Display routing table
+show ip route summary           # Routing table summary
+show ip route <network>         # Specific route
+
+# VLAN interfaces
+show interface ve              # All VLAN interfaces
+show interface ve <vlan-id>    # Specific VLAN interface
+
+# ARP table
+show arp                       # ARP table
+show arp <ip-address>         # Specific ARP entry
+
+# IP configuration
+show ip interface             # IP interface status
+show ip interface brief       # Brief IP interface status
+```
+
+## Advanced Routing Features ⚠️ TO TEST
+```bash
+# OSPF configuration
+router ospf
+  area <area-id>
+  network <network> <wildcard-mask> area <area-id>
+  exit
+
+# Access Control Lists (ACLs)
+access-list <number> <permit|deny> <source> <destination>
+interface ethernet <port>
+  ip access-group <acl-number> <in|out>
+
+# DHCP relay
+ip helper-address <dhcp-server-ip>  # Applied to VLAN interfaces
+```
