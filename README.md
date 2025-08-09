@@ -107,3 +107,75 @@ server {
 All other configuration is stored in each file by domain and proxy in ./volumes/nginx/conf
 
 automation.conf  base.conf  challenge.conf  dnd.conf  nvr.conf  tv.conf
+
+
+## 🚀 Proxmox Network Tuning – Final Applied Settings
+
+These settings were used to optimize WAN upload performance and reduce latency/bufferbloat, while keeping LAN throughput strong.  
+They’re safe to reapply after reboots via a persistent script/systemd service.
+
+### 1. TCP & Queue Discipline
+```bash
+# Load and set BBR congestion control
+modprobe tcp_bbr
+sysctl -w net.ipv4.tcp_congestion_control=bbr
+
+# Apply fair queuing (fq) to NIC
+tc qdisc add dev enp5s0f0np0 root fq
+```
+
+### 2. NIC Offload Adjustments *(optional if router handles shaping)*
+```bash
+# Reduce burstiness by disabling large segment offloads
+ethtool -K enp5s0f0np0 gso off tso off lro off
+
+# Keep GRO enabled for receive efficiency
+ethtool -K enp5s0f0np0 gro on
+```
+
+### 3. Queue & Interrupt Tuning
+```bash
+# Limit TX queue length
+ip link set dev enp5s0f0np0 txqueuelen 1000
+
+# Enable adaptive interrupt coalescing
+ethtool -C enp5s0f0np0 adaptive-rx on adaptive-tx on rx-usecs 50 tx-usecs 50
+```
+
+### 4. Persistence
+- `/etc/sysctl.d/99-network-bbr.conf`:
+  ```
+  net.ipv4.tcp_congestion_control = bbr
+  ```
+- Systemd service (`/etc/systemd/system/network-tune.service`) to reapply `fq` at boot:
+  ```ini
+  [Unit]
+  Description=Apply fq qdisc on enp5s0f0np0 at boot
+  After=network.target
+
+  [Service]
+  Type=oneshot
+  ExecStart=/usr/sbin/tc qdisc add dev enp5s0f0np0 root fq
+  RemainAfterExit=yes
+
+  [Install]
+  WantedBy=multi-user.target
+  ```
+
+Enable with:
+```bash
+systemctl daemon-reexec
+systemctl enable network-tune.service
+```
+
+### 5. OPNsense Router Shaping
+- Enabled **FQ-CoDel** on WAN.
+- Recommended: Also enable **FQ-CoDel or Cake** on LAN to pace egress toward WAN and enforce fairness between LAN clients.
+
+---
+
+**Note:**  
+- Host‑side tuning was key for diagnostics and per‑node optimization.  
+- Router‑side shaping (FQ-CoDel/Cake) ensures multi‑client fairness and consistency.  
+- Offload settings may be re‑enabled for max efficiency if central shaping is active and CPU load is a concern.
+
